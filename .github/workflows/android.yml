@@ -8,29 +8,41 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: Set up JDK 8
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '8'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Make Gradle executable
-        run: chmod +x ./gradlew
+      - name: Install Android SDK 21
+        run: |
+          sdkmanager "platforms;android-21" "build-tools;21.1.2"
 
-      - name: Build APK
-        run: ./gradlew assembleDebug
+      - name: Set up Gradle 2.14.1
+        run: |
+          wget https://services.gradle.org/distributions/gradle-2.14.1-bin.zip
+          unzip -q gradle-2.14.1-bin.zip -d $HOME/gradle
+          echo "$HOME/gradle/gradle-2.14.1/bin" >> $GITHUB_PATH
 
-      - name: Upload APK
+      - name: Build Free APK
+        run: gradle assembleFreeDebug
+
+      - name: Build Pro APK
+        run: gradle assembleProDebug
+
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: Android-Barcode-Scanner-APK
-          path: '**/build/outputs/apk/debug/*.apk'
+          name: Android-Barcode-Scanner-APKs
+          path: |
+            app/build/outputs/apk/free/debug/*.apk
+            app/build/outputs/apk/pro/debug/*.apk
